@@ -21,9 +21,9 @@ class UserSerializer(serializers.ModelSerializer):
     Read-only computed fields for full_name, short_name, initials.
     """
 
-    full_name = serializers.CharField(source='full_name', read_only=True)
-    short_name = serializers.CharField(source='short_name', read_only=True)
-    initials = serializers.CharField(source='initials', read_only=True)
+    full_name = serializers.CharField(read_only=True)
+    short_name = serializers.CharField(read_only=True)
+    initials = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -40,8 +40,8 @@ class UserSerializer(serializers.ModelSerializer):
 class UserMinimalSerializer(serializers.ModelSerializer):
     """Minimal user serializer for nested relationships."""
 
-    full_name = serializers.CharField(source='full_name', read_only=True)
-    initials = serializers.CharField(source='initials', read_only=True)
+    full_name = serializers.CharField(read_only=True)
+    initials = serializers.CharField(read_only=True)
 
     class Meta:
         model = User

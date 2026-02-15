@@ -23,7 +23,7 @@ class ProjectRoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectRole
         fields = [
-            'id', 'name', 'description', 'permissions',
+            'id', 'name', 'description', 'permissions', 'permissions_count',
             'is_default', 'organization',
             'created_at', 'updated_at'
         ]

@@ -312,9 +312,9 @@ ws://api.example.com/ws/notifications/?token=<access_token>
 
     # Enum handling
     'ENUM_NAME_OVERRIDES': {
-        'IssueStatusEnum': 'apps.issues.models.IssueStatus',
-        'IssuePriorityEnum': 'apps.issues.models.IssuePriority',
-        'IssueTypeEnum': 'apps.issues.models.IssueType',
+        # 'IssueStatusEnum': 'apps.issues.models.IssueStatus',
+        # 'IssuePriorityEnum': 'apps.issues.models.IssuePriority',
+        # 'IssueTypeEnum': 'apps.issues.models.IssueType',
         'WorkflowStatusCategoryEnum': 'apps.workflows.models.StatusCategory',
         'AutomationTriggerTypeEnum': 'apps.automation.models.TriggerType',
         'AuditActionEnum': 'apps.audit.models.AuditAction',
