@@ -1,0 +1,163 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: bugstracker_postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-bugstracker}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bugstracker_network
+
+  # Redis (Cache, Celery broker, Channels layer)
+  redis:
+    image: redis:7-alpine
+    container_name: bugstracker_redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bugstracker_network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: bugstracker_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - bugstracker_network
+
+  # Django Backend (Development)
+  backend:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: bugstracker_backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ../../backend:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DB_HOST=postgres
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - bugstracker_network
+
+  # Celery Worker
+  celery:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.celery
+    container_name: bugstracker_celery
+    command: celery -A config worker -l info --concurrency=4
+    volumes:
+      - ../../backend:/app
+    env_file:
+      - ../../.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DB_HOST=postgres
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - postgres
+      - redis
+      - backend
+    networks:
+      - bugstracker_network
+
+  # Celery Beat (Scheduler)
+  celery-beat:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.celery
+    container_name: bugstracker_celery_beat
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ../../backend:/app
+    env_file:
+      - ../../.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DB_HOST=postgres
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - postgres
+      - redis
+      - backend
+    networks:
+      - bugstracker_network
+
+  # Flower (Celery monitoring)
+  flower:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.celery
+    container_name: bugstracker_flower
+    command: celery -A config flower --port=5555
+    ports:
+      - "5555:5555"
+    env_file:
+      - ../../.env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - redis
+      - celery
+    networks:
+      - bugstracker_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+
+networks:
+  bugstracker_network:
+    driver: bridge

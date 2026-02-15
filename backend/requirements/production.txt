@@ -1,0 +1,8 @@
+-r base.txt
+
+# Production WSGI/ASGI Server
+gunicorn==23.0.0
+uvicorn==0.34.0
+
+# Performance
+gevent==24.11.1

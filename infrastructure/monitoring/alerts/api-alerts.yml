@@ -1,0 +1,165 @@
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) by (namespace)
+            /
+            sum(rate(http_requests_total[5m])) by (namespace)
+          ) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "High API error rate ({{ $value | humanizePercentage }})"
+          description: "API error rate is above 1% for namespace {{ $labels.namespace }}"
+
+      # Slow response time
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, namespace)
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Slow API response time (p95: {{ $value }}s)"
+          description: "95th percentile response time is above 1s for namespace {{ $labels.namespace }}"
+
+      # High request rate
+      - alert: HighRequestRate
+        expr: |
+          sum(rate(http_requests_total[5m])) by (namespace) > 10000
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API request rate ({{ $value }} req/s)"
+          description: "API request rate is above 10,000 req/s for namespace {{ $labels.namespace }}"
+
+      # Pod restarts
+      - alert: PodRestarting
+        expr: |
+          rate(kube_pod_container_status_restarts_total{namespace="bugstracker-production"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Pod {{ $labels.pod }} is restarting"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has restarted {{ $value }} times"
+
+      # Database connection pool exhausted
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          (
+            sum(django_db_connections_used) by (namespace)
+            /
+            sum(django_db_connections_total) by (namespace)
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Database connection pool is {{ $value | humanizePercentage }} full"
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          avg(rate(container_cpu_usage_seconds_total{namespace="bugstracker-production",container!=""}[5m])) by (pod) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage for {{ $labels.pod }}"
+          description: "Pod {{ $labels.pod }} has CPU usage above 80%"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_working_set_bytes{namespace="bugstracker-production",container!=""}
+            /
+            container_spec_memory_limit_bytes{namespace="bugstracker-production",container!=""}
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "High memory usage for {{ $labels.pod }}"
+          description: "Pod {{ $labels.pod }} has memory usage above 90%"
+
+      # Celery queue length
+      - alert: CeleryQueueTooLong
+        expr: |
+          celery_queue_length > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: celery
+        annotations:
+          summary: "Celery queue too long"
+          description: "Celery queue has {{ $value }} tasks pending"
+
+      # Elasticsearch cluster health
+      - alert: ElasticsearchClusterUnhealthy
+        expr: |
+          elasticsearch_cluster_health_status{color="red"} == 1
+        for: 5m
+        labels:
+          severity: critical
+          component: elasticsearch
+        annotations:
+          summary: "Elasticsearch cluster is unhealthy"
+          description: "Elasticsearch cluster health is RED"
+
+      # Redis down
+      - alert: RedisDown
+        expr: |
+          redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis instance is not responding"
+
+      # PostgreSQL down
+      - alert: PostgreSQLDown
+        expr: |
+          pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: postgres
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance is not responding"
+
+      # Disk space running out
+      - alert: DiskSpaceRunningOut
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"}
+            /
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) < 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Disk space running out on {{ $labels.instance }}"
+          description: "Disk space is below 20% on {{ $labels.instance }}"

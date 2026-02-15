@@ -1,0 +1,28 @@
+-r base.txt
+
+# Development & Debugging
+django-debug-toolbar==4.4.6
+django-silk==5.3.0
+ipython==8.31.0
+ipdb==0.13.13
+
+# Code Quality
+black==24.10.0
+isort==5.13.2
+flake8==7.1.1
+pylint==3.3.2
+mypy==1.14.0
+django-stubs==5.1.1
+djangorestframework-stubs==3.15.2
+
+# Testing
+pytest==8.3.4
+pytest-django==4.9.0
+pytest-cov==6.0.0
+pytest-xdist==3.6.1
+factory-boy==3.3.1
+faker==33.1.0
+coverage==7.6.9
+
+# Documentation
+sphinx==8.1.3

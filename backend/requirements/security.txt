@@ -1,0 +1,63 @@
+# Security-specific Python packages
+# Include this in production.txt and development.txt
+
+# Password hashing (Argon2)
+argon2-cffi==23.1.0
+
+# HTML sanitization
+bleach==6.1.0
+
+# File type detection (MIME type validation)
+python-magic==0.4.27
+
+# Security scanning tools (development only)
+safety==3.2.11
+bandit[toml]==1.7.10
+
+# Cryptography
+cryptography==44.0.0
+django-cryptography==1.2
+
+# Rate limiting (Redis-based)
+django-ratelimit==4.1.0
+
+# CORS headers
+django-cors-headers==4.6.0
+
+# Security middleware
+django-csp==3.8  # Content Security Policy
+django-permissions-policy==4.20.0  # Permissions-Policy header
+
+# Secret detection (development only)
+detect-secrets==1.5.0
+
+# Environment variable management
+python-decouple==3.8
+
+# Secure session management
+django-encrypted-session-cookie==0.1.2
+
+# Two-factor authentication (optional)
+django-otp==1.5.4
+qrcode==8.0
+
+# OAuth2 (if needed for SSO)
+django-oauth-toolkit==3.0.1
+
+# JWT
+djangorestframework-simplejwt==5.4.2
+
+# API key management
+djangorestframework-api-key==3.0.0
+
+# Audit logging
+django-auditlog==3.0.0
+
+# IP address utilities
+django-ipware==7.0.1
+
+# Guardian (object-level permissions)
+django-guardian==2.4.0
+
+# Content sanitization
+django-bleach==3.2.0

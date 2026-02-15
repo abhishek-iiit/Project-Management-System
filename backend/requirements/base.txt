@@ -1,0 +1,45 @@
+# Core Django
+Django==5.2.5
+djangorestframework==3.16.1
+django-filter==24.3
+drf-spectacular==0.28.0
+
+# Database
+psycopg2-binary==2.9.10
+
+# Cache & Queue
+redis==5.2.1
+celery==5.4.0
+django-redis==5.4.0
+
+# WebSocket
+channels==4.2.0
+channels-redis==4.2.1
+daphne==4.1.2
+
+# Search
+elasticsearch==8.16.0
+django-elasticsearch-dsl==8.0
+
+# Authentication & Security
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.6.0
+django-ratelimit==4.1.0
+django-guardian==2.4.0
+cryptography==44.0.0
+
+# Utilities
+python-dotenv==1.0.1
+python-decouple==3.8
+pytz==2024.2
+pillow==11.0.0
+
+# Validation
+pydantic==2.10.4
+
+# Performance & Monitoring
+sentry-sdk==2.19.2
+prometheus-client==0.21.0
+
+# API Documentation
+drf-yasg==1.21.8
